@@ -2,7 +2,6 @@ package com.automation.pages;
 
 import com.automation.core.base.Base;
 import com.automation.core.driver.TestContext;
-import java.util.List;
 import org.openqa.selenium.By;
 
 public class Login extends Base {
@@ -14,10 +13,10 @@ public class Login extends Base {
     private static final By DASHBOARD = By.xpath("//*[contains(@class,'header') and text()='Dashboard']");
     private static final By LOGIN_ERROR = By.xpath("//div[contains(@class,'error')]//*[text()='Invalid credentials']");
 
-    private static final List<By> DEFAULT_LOCATORS = List.of(LOGIN_PAGE);
+    private static final By[] DEFAULT_LOCATORS = {LOGIN_PAGE};
 
     public Login(TestContext context) {
-        super(context.getDriver(), DEFAULT_LOCATORS);
+        super(context.getDriver());
     }
 
     public void enterUsername(String username) {
@@ -42,5 +41,10 @@ public class Login extends Base {
 
     public boolean isLoginErrorDisplayed() {
         return isElementDisplayed(LOGIN_ERROR, DEFAULT_TIMEOUT);
+    }
+
+    @Override
+    protected By[] getDefaultLocators() {
+        return DEFAULT_LOCATORS;
     }
 }

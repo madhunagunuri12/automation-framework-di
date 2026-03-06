@@ -1,20 +1,21 @@
 package com.automation.core.base;
 
 import com.automation.core.logging.LoggerUtil;
-import java.util.List;
+
+import java.util.Arrays;
 import java.util.Optional;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-public class Base extends SeleniumUtils {
+public abstract class Base extends SeleniumUtils {
 
     protected WebDriver driver;
 
-    public Base(WebDriver driver, List<By> defaultLocators) {
+    public Base(WebDriver driver) {
         super(driver);
         this.driver = driver;
-        verifyDefaultLocators(defaultLocators);
+        waitForPageToLoad();
     }
 
     public void navigateTo(String url) {
@@ -33,18 +34,6 @@ public class Base extends SeleniumUtils {
         driver.quit();
     }
 
-    private void verifyDefaultLocators(List<By> locators) {
-        LoggerUtil.info("🔍 Verifying default locators...");
-
-        for (By locator : locators) {
-            Optional<WebElement> element = waitForElement(locator, DEFAULT_TIMEOUT);
-            if (element.isEmpty()) {
-                throw new IllegalStateException("Default locator not visible: " + locator);
-            }
-            LoggerUtil.info("✅ " + locator + " is displayed");
-        }
-    }
-
     public Optional<WebElement> waitForElement(By by, long timeout) {
         try {
             WebElement element = waitForElementToBeVisible(by, timeout);
@@ -53,5 +42,19 @@ public class Base extends SeleniumUtils {
             LoggerUtil.warn("Element not found or not visible: " + by);
             return Optional.empty();
         }
+    }
+
+    /**
+     * Each page MUST provide default locators.
+     */
+    protected abstract By[] getDefaultLocators();
+
+    /**
+     * Common wait logic for all pages
+     */
+    private void waitForPageToLoad() {
+        By[] locators = getDefaultLocators();
+
+        Arrays.stream(locators).forEach(this::isElementDisplayed);
     }
 }

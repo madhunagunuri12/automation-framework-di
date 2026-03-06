@@ -2,7 +2,6 @@ package com.automation.pages;
 
 import com.automation.core.base.Base;
 import com.automation.core.driver.TestContext;
-import java.util.List;
 import org.openqa.selenium.By;
 
 public class AdminUserManagement extends Base {
@@ -13,10 +12,10 @@ public class AdminUserManagement extends Base {
     private static final By SEARCH_BUTTON = By.xpath("//button[text()=' Search ']");
     private static final By RESET_BUTTON = By.xpath("//button[text()=' Reset ']");
     private static final String USER_ROW = "//div[@role='table']//div[text()='{{username}}']";
-    private static final List<By> DEFAULT_LOCATORS = List.of(USER_MANAGEMENT_TAB);
-    
+    private static final By[] DEFAULT_LOCATORS = {USER_MANAGEMENT_TAB};
+
     public AdminUserManagement(TestContext context) {
-        super(context.getDriver(), DEFAULT_LOCATORS);
+        super(context.getDriver());
     }
 
     public void clickAddUserButton() {
@@ -52,5 +51,10 @@ public class AdminUserManagement extends Base {
     public boolean isUserPresentInResults(String username) {
         By userRow = By.xpath(USER_ROW.replace("{{username}}", username));
         return isElementDisplayed(userRow);
+    }
+
+    @Override
+    protected By[] getDefaultLocators() {
+        return DEFAULT_LOCATORS;
     }
 }

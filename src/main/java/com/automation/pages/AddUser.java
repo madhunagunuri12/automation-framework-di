@@ -2,9 +2,6 @@ package com.automation.pages;
 
 import com.automation.core.base.Base;
 import com.automation.core.driver.TestContext;
-
-import java.util.List;
-
 import org.openqa.selenium.By;
 
 public class AddUser extends Base {
@@ -26,11 +23,11 @@ public class AddUser extends Base {
     private static final By SUCCESS_TOAST_MESSAGE = By.cssSelector(
             ".oxd-toast-container--bottom div[class='oxd-toast oxd-toast--success oxd-toast-container--toast']");
 
-    private static final List<By> DEFAULT_LOCATORS = List.of(ADD_USER_HEADER, USER_ROLE_DROPDOWN,
-            USERNAME_INPUT, SAVE_BUTTON);
+    private static final By[] DEFAULT_LOCATORS = {ADD_USER_HEADER, USER_ROLE_DROPDOWN,
+            USERNAME_INPUT, SAVE_BUTTON};
 
     public AddUser(TestContext context) {
-        super(context.getDriver(), DEFAULT_LOCATORS);
+        super(context.getDriver());
     }
 
     public boolean isPageLoaded() {
@@ -92,5 +89,10 @@ public class AddUser extends Base {
 
     public boolean isSuccessMessageDisplayed() {
         return isElementDisplayed(SUCCESS_TOAST_MESSAGE, DEFAULT_TIMEOUT);
+    }
+
+    @Override
+    protected By[] getDefaultLocators() {
+        return DEFAULT_LOCATORS;
     }
 }

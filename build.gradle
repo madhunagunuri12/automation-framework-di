@@ -12,15 +12,15 @@ repositories {
 dependencies {
 
 
-    implementation 'org.seleniumhq.selenium:selenium-java:4.14.1'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.21.0'
 
-    implementation 'io.cucumber:cucumber-java:7.5.0'
-    implementation 'io.cucumber:cucumber-testng:7.5.0'
-    implementation 'io.cucumber:cucumber-picocontainer:7.5.0'
+    implementation 'io.cucumber:cucumber-java:7.18.0'
+    implementation 'io.cucumber:cucumber-testng:7.18.0'
+    implementation 'io.cucumber:cucumber-picocontainer:7.18.0'
 
     implementation 'net.masterthought:cucumber-reporting:5.8.4'
 
-    implementation 'org.testng:testng:7.7.1'
+    implementation 'org.testng:testng:7.10.2'
 
     implementation 'org.slf4j:slf4j-api:2.0.7'
 
@@ -40,13 +40,11 @@ dependencies {
     implementation('com.opencsv:opencsv:5.9') {
         exclude group: 'commons-beanutils', module: 'commons-beanutils'
     }
-    implementation 'io.rest-assured:rest-assured:5.3.2'
+    implementation 'io.rest-assured:rest-assured:5.4.0'
     implementation 'org.apache.commons:commons-compress:1.26.2'
     implementation 'commons-beanutils:commons-beanutils:1.10.0'
 
-    implementation('commons-configuration:commons-configuration:1.10') {
-        exclude group: 'commons-lang', module: 'commons-lang'
-    }
+    implementation 'org.apache.commons:commons-configuration2:2.10.1'
 }
 
 test {
