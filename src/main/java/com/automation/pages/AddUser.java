@@ -1,0 +1,96 @@
+package com.automation.pages;
+
+import com.automation.core.base.Base;
+import com.automation.core.driver.TestContext;
+
+import java.util.List;
+
+import org.openqa.selenium.By;
+
+public class AddUser extends Base {
+    private static final By ADD_USER_HEADER = By.xpath("//*[text()='Add User']");
+    private static final By USER_ROLE_DROPDOWN = By.xpath(
+            "//label[text()='User Role']/parent::div/following-sibling::div//div[@class='oxd-select-wrapper']");
+    private static final By EMPLOYEE_NAME_INPUT = By.xpath(
+            "//label[text()='Employee Name']/parent::div/following-sibling::div//input");
+    private static final By STATUS_DROPDOWN = By.xpath(
+            "//label[text()='Status']/parent::div/following-sibling::div//div[@class='oxd-select-wrapper']");
+    private static final By USERNAME_INPUT = By.xpath(
+            "//label[text()='Username']/parent::div/following-sibling::div//input");
+    private static final By PASSWORD_INPUT = By.xpath(
+            "//label[text()='Password']/parent::div/following-sibling::div//input");
+    private static final By CONFIRM_PASSWORD_INPUT = By.xpath(
+            "//label[text()='Confirm Password']/parent::div/following-sibling::div//input");
+    private static final By SAVE_BUTTON = By.xpath("//button[text()=' Save ']");
+    private static final By CANCEL_BUTTON = By.xpath("//button[text()=' Cancel ']");
+    private static final By SUCCESS_TOAST_MESSAGE = By.cssSelector(
+            ".oxd-toast-container--bottom div[class='oxd-toast oxd-toast--success oxd-toast-container--toast']");
+
+    private static final List<By> DEFAULT_LOCATORS = List.of(ADD_USER_HEADER, USER_ROLE_DROPDOWN,
+            USERNAME_INPUT, SAVE_BUTTON);
+
+    public AddUser(TestContext context) {
+        super(context.getDriver(), DEFAULT_LOCATORS);
+    }
+
+    public boolean isPageLoaded() {
+        return isElementDisplayed(ADD_USER_HEADER) && isElementDisplayed(SAVE_BUTTON);
+    }
+
+    public void selectUserRole(String role) {
+        click(USER_ROLE_DROPDOWN);
+        By roleOption = By.xpath("//div[@role='listbox']//*[text()='" + role + "']");
+        click(roleOption);
+    }
+
+    public void enterEmployeeName(String employeeName) throws InterruptedException {
+        enterText(EMPLOYEE_NAME_INPUT, employeeName);
+        By suggestion = By.xpath("//div[@role='listbox']//*[contains(text(),'" + employeeName + "')]");
+
+        waitForCondition(true, ele ->
+                waitForElementToBeInvisible(By.xpath("//*[text()='Searching....']")));
+        waitForCondition(true, ele -> {
+            try {
+                if (driver.findElement((By.cssSelector("div[role='option']"))).isDisplayed()) {
+                    driver.findElement(By.cssSelector("div[role='option']")).click();
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }, DEFAULT_TIMEOUT, 1);
+
+    }
+
+    public void selectStatus(String status) {
+        click(STATUS_DROPDOWN);
+        By statusOption = By.xpath("//div[@role='listbox']//*[text()='" + status + "']");
+        click(statusOption);
+    }
+
+    public void enterUsername(String username) {
+        enterText(USERNAME_INPUT, username);
+    }
+
+    public void enterPassword(String password) {
+        enterText(PASSWORD_INPUT, password);
+    }
+
+    public void enterConfirmPassword(String password) {
+        enterText(CONFIRM_PASSWORD_INPUT, password);
+    }
+
+    public void clickSave() {
+        click(SAVE_BUTTON);
+    }
+
+    public void clickCancel() {
+        click(CANCEL_BUTTON);
+    }
+
+    public boolean isSuccessMessageDisplayed() {
+        return isElementDisplayed(SUCCESS_TOAST_MESSAGE, DEFAULT_TIMEOUT);
+    }
+}

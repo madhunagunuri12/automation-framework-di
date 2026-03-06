@@ -10,10 +10,45 @@ repositories {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+
+    implementation 'org.seleniumhq.selenium:selenium-java:4.14.1'
+
+    implementation 'io.cucumber:cucumber-java:7.5.0'
+    implementation 'io.cucumber:cucumber-testng:7.5.0'
+    implementation 'io.cucumber:cucumber-picocontainer:7.5.0'
+
+    implementation 'net.masterthought:cucumber-reporting:5.8.4'
+
+    implementation 'org.testng:testng:7.7.1'
+
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+
+    // Log4j2
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.23.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.23.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.23.1'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
+    implementation 'commons-io:commons-io:2.16.1'
+    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
+    
+    implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
+    implementation 'org.xmlunit:xmlunit-core:2.10.0'
+    implementation('com.opencsv:opencsv:5.9') {
+        exclude group: 'commons-beanutils', module: 'commons-beanutils'
+    }
+    implementation 'io.rest-assured:rest-assured:5.3.2'
+    implementation 'org.apache.commons:commons-compress:1.26.2'
+    implementation 'commons-beanutils:commons-beanutils:1.10.0'
+
+    implementation('commons-configuration:commons-configuration:1.10') {
+        exclude group: 'commons-lang', module: 'commons-lang'
+    }
 }
 
 test {
-    useJUnitPlatform()
+    useTestNG()
 }
