@@ -78,20 +78,24 @@ final String DEFAULT_SUITE_FILE = resolveRuntimeValue('suiteFile', 'testng.xml')
  * Resolves a suite input against:
  * 1) exact provided path
  * 2) DEFAULT_SUITE_DIR/<provided>
+ * 3) src/test/resources/<provided> (for inputs like suites/testng.xml)
+ * 4) DEFAULT_SUITE_DIR/<provided-without-leading-suites/>
  */
 def resolveSuiteFile = { String suiteInput ->
-    String normalized = suiteInput.trim()
-    File direct = file(normalized)
-    if (direct.exists() && direct.isFile()) {
-        return direct
+    String normalized = suiteInput.trim().replace('\\', '/')
+    List<File> candidates = []
+
+    candidates.add(file(normalized))
+    candidates.add(file("${DEFAULT_SUITE_DIR}/${normalized}"))
+    candidates.add(file("src/test/resources/${normalized}"))
+
+    if (normalized.startsWith("suites/")) {
+        String withoutSuitesPrefix = normalized.substring("suites/".length())
+        candidates.add(file("${DEFAULT_SUITE_DIR}/${withoutSuitesPrefix}"))
     }
 
-    File underDefaultDir = file("${DEFAULT_SUITE_DIR}/${normalized}")
-    if (underDefaultDir.exists() && underDefaultDir.isFile()) {
-        return underDefaultDir
-    }
-
-    return direct
+    File resolved = candidates.find { it.exists() && it.isFile() }
+    return resolved != null ? resolved : candidates.first()
 }
 
 /**
@@ -256,3 +260,4 @@ test {
         applyCommonCucumberRuntimeProps(delegate as Test)
     }
 }
+
