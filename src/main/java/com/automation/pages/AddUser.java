@@ -2,8 +2,9 @@ package com.automation.pages;
 
 import com.automation.core.base.Base;
 import com.automation.core.driver.TestContext;
+import com.automation.pages.components.AutoCompleteComponent;
+import com.automation.pages.components.DropdownComponent;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 
 public class AddUser extends Base {
     private static final By ADD_USER_HEADER = By.xpath("//*[text()='Add User']");
@@ -29,8 +30,13 @@ public class AddUser extends Base {
     private static final By[] DEFAULT_LOCATORS = {ADD_USER_HEADER, USER_ROLE_DROPDOWN,
             USERNAME_INPUT, SAVE_BUTTON};
 
+    private final DropdownComponent dropdownComponent;
+    private final AutoCompleteComponent autoCompleteComponent;
+
     public AddUser(TestContext context) {
         super(context.getDriver());
+        this.dropdownComponent = new DropdownComponent(context.getDriver());
+        this.autoCompleteComponent = new AutoCompleteComponent(context.getDriver());
     }
 
     public boolean isPageLoaded() {
@@ -38,31 +44,20 @@ public class AddUser extends Base {
     }
 
     public void selectUserRole(String role) {
-        click(USER_ROLE_DROPDOWN);
-        By roleOption = By.xpath("//div[@role='listbox']//*[text()='" + role + "']");
-        click(roleOption);
+        dropdownComponent.selectOption(USER_ROLE_DROPDOWN, role);
     }
 
     public void enterEmployeeName(String employeeName) {
-        enterText(EMPLOYEE_NAME_INPUT, employeeName);
-
-        waitForCondition(Boolean.TRUE, value -> waitForElementToBeInvisible(SEARCHING_LOADER));
-
-        waitForCondition(Boolean.TRUE, value -> waitForElement(EMPLOYEE_OPTION, DEFAULT_TIMEOUT)
-                .map(new java.util.function.Function<WebElement, Boolean>() {
-                    @Override
-                    public Boolean apply(WebElement element) {
-                        element.click();
-                        return true;
-                    }
-                })
-                .orElse(false), DEFAULT_TIMEOUT, 1);
+        autoCompleteComponent.typeAndSelectFirstOption(
+                EMPLOYEE_NAME_INPUT,
+                SEARCHING_LOADER,
+                EMPLOYEE_OPTION,
+                employeeName
+        );
     }
 
     public void selectStatus(String status) {
-        click(STATUS_DROPDOWN);
-        By statusOption = By.xpath("//div[@role='listbox']//*[text()='" + status + "']");
-        click(statusOption);
+        dropdownComponent.selectOption(STATUS_DROPDOWN, status);
     }
 
     public void enterUsername(String username) {
