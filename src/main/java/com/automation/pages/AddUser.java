@@ -3,6 +3,7 @@ package com.automation.pages;
 import com.automation.core.base.Base;
 import com.automation.core.driver.TestContext;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 public class AddUser extends Base {
     private static final By ADD_USER_HEADER = By.xpath("//*[text()='Add User']");
@@ -20,6 +21,8 @@ public class AddUser extends Base {
             "//label[text()='Confirm Password']/parent::div/following-sibling::div//input");
     private static final By SAVE_BUTTON = By.xpath("//button[text()=' Save ']");
     private static final By CANCEL_BUTTON = By.xpath("//button[text()=' Cancel ']");
+    private static final By EMPLOYEE_OPTION = By.cssSelector("div[role='option']");
+    private static final By SEARCHING_LOADER = By.xpath("//*[text()='Searching....']");
     private static final By SUCCESS_TOAST_MESSAGE = By.cssSelector(
             ".oxd-toast-container--bottom div[class='oxd-toast oxd-toast--success oxd-toast-container--toast']");
 
@@ -40,25 +43,20 @@ public class AddUser extends Base {
         click(roleOption);
     }
 
-    public void enterEmployeeName(String employeeName) throws InterruptedException {
+    public void enterEmployeeName(String employeeName) {
         enterText(EMPLOYEE_NAME_INPUT, employeeName);
-        By suggestion = By.xpath("//div[@role='listbox']//*[contains(text(),'" + employeeName + "')]");
 
-        waitForCondition(true, ele ->
-                waitForElementToBeInvisible(By.xpath("//*[text()='Searching....']")));
-        waitForCondition(true, ele -> {
-            try {
-                if (driver.findElement((By.cssSelector("div[role='option']"))).isDisplayed()) {
-                    driver.findElement(By.cssSelector("div[role='option']")).click();
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (Exception e) {
-                return false;
-            }
-        }, DEFAULT_TIMEOUT, 1);
+        waitForCondition(Boolean.TRUE, value -> waitForElementToBeInvisible(SEARCHING_LOADER));
 
+        waitForCondition(Boolean.TRUE, value -> waitForElement(EMPLOYEE_OPTION, DEFAULT_TIMEOUT)
+                .map(new java.util.function.Function<WebElement, Boolean>() {
+                    @Override
+                    public Boolean apply(WebElement element) {
+                        element.click();
+                        return true;
+                    }
+                })
+                .orElse(false), DEFAULT_TIMEOUT, 1);
     }
 
     public void selectStatus(String status) {

@@ -9,6 +9,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import java.util.Arrays;
 import org.testng.Assert;
 
 public class LoginSteps {
@@ -21,10 +22,14 @@ public class LoginSteps {
 
     @ParameterType("username|password")
     public String getCredential(String key) {
-        if (Constants.login.USERNAME.equals(key) || Constants.login.PASSWORD.equals(key)) {
-            return ConfigReader.getProperty(key);
+        boolean allowedCredential = Arrays.asList(Constants.login.USERNAME, Constants.login.PASSWORD)
+                .contains(key);
+
+        if (!allowedCredential) {
+            throw new IllegalArgumentException("Unsupported credential key: " + key);
         }
-        return ConfigReader.getProperty(key);
+
+        return ConfigReader.getRequiredProperty(key);
     }
 
     @When("User enters user name {getCredential}")

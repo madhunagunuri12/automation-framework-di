@@ -212,7 +212,7 @@ public final class DateTimeUtil {
      */
     public static String resolve(String expression) {
 
-        if (expression == null || expression.isBlank()) {
+        if (expression == null || expression.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "Expression cannot be null/empty");
         }

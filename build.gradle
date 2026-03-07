@@ -9,6 +9,11 @@ repositories {
     mavenCentral()
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
 dependencies {
 
 
@@ -33,7 +38,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.17.0'
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-    
+
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
     implementation 'org.apache.poi:poi-ooxml:5.3.0'
     implementation 'org.xmlunit:xmlunit-core:2.10.0'
@@ -47,6 +52,207 @@ dependencies {
     implementation 'org.apache.commons:commons-configuration2:2.10.1'
 }
 
+/**
+ * Robust property resolver with precedence:
+ * -P<name> > -D<name> > defaultValue
+ */
+def resolveRuntimeValue = { String name, String defaultValue = null ->
+    def gradleProp = project.findProperty(name)
+    if (gradleProp != null && !gradleProp.toString().trim().isEmpty()) {
+        return gradleProp.toString().trim()
+    }
+
+    def systemProp = System.getProperty(name)
+    if (systemProp != null && !systemProp.trim().isEmpty()) {
+        return systemProp.trim()
+    }
+
+    return defaultValue
+}
+
+// Predefined suite location so callers can pass only file name: -PsuiteFile=testng.xml
+final String DEFAULT_SUITE_DIR = resolveRuntimeValue('suiteBaseDir', 'src/test/resources/suites')
+final String DEFAULT_SUITE_FILE = resolveRuntimeValue('suiteFile', 'testng.xml')
+
+/**
+ * Resolves a suite input against:
+ * 1) exact provided path
+ * 2) DEFAULT_SUITE_DIR/<provided>
+ */
+def resolveSuiteFile = { String suiteInput ->
+    String normalized = suiteInput.trim()
+    File direct = file(normalized)
+    if (direct.exists() && direct.isFile()) {
+        return direct
+    }
+
+    File underDefaultDir = file("${DEFAULT_SUITE_DIR}/${normalized}")
+    if (underDefaultDir.exists() && underDefaultDir.isFile()) {
+        return underDefaultDir
+    }
+
+    return direct
+}
+
+/**
+ * Parses comma-separated suite names/paths and validates each one.
+ */
+def resolveSuiteFiles = {
+    String suiteProp = resolveRuntimeValue('suiteFile', DEFAULT_SUITE_FILE)
+
+    if (suiteProp == null || suiteProp.trim().isEmpty()) {
+        throw new GradleException("suiteFile cannot be blank. Provide -PsuiteFile=<file|path>.")
+    }
+
+    List<String> rawEntries = suiteProp
+            .split(',')
+            .collect { it.trim() }
+            .findAll { !it.isEmpty() }
+
+    if (rawEntries.isEmpty()) {
+        throw new GradleException("No valid suite files resolved from suiteFile='${suiteProp}'.")
+    }
+
+    List<File> suiteFiles = rawEntries.collect { resolveSuiteFile(it) }
+
+    List<File> missingSuites = suiteFiles.findAll { !it.exists() || !it.isFile() }
+    if (!missingSuites.isEmpty()) {
+        String missing = missingSuites.collect { it.path }.join(', ')
+        throw new GradleException(
+                "Suite file(s) not found: ${missing}. Checked direct path and '${DEFAULT_SUITE_DIR}/<suiteFile>'."
+        )
+    }
+
+    return suiteFiles
+}
+
+/**
+ * Browser is mandatory for cucumber execution tasks.
+ */
+def resolveMandatoryBrowser = {
+    String browser = resolveRuntimeValue('browser', null)
+    if (browser == null || browser.trim().isEmpty()) {
+        throw new GradleException("browser is mandatory. Pass -Dbrowser=<browser> or -Pbrowser=<browser>.")
+    }
+
+    String normalized = browser.trim().toLowerCase()
+    Set<String> supportedBrowsers = ['chrome', 'firefox', 'edge', 'headless-chrome', 'headless-firefox'] as Set
+    if (!supportedBrowsers.contains(normalized)) {
+        throw new GradleException(
+                "Unsupported browser='${browser}'. Supported values: ${supportedBrowsers.join(', ')}"
+        )
+    }
+
+    return normalized
+}
+
+def applyCommonCucumberRuntimeProps = { Test task ->
+    // Pass-through framework runtime properties when provided.
+    [
+            'execution',
+            'grid.url',
+            'retry.max',
+            'retry.threshold',
+            'retry.immediate.enabled'
+    ].each { key ->
+        String value = resolveRuntimeValue(key, null)
+        if (value != null && !value.trim().isEmpty()) {
+            task.systemProperty(key, value)
+        }
+    }
+
+    // Tag filter: support both -Ptags and -Dcucumber.filter.tags
+    String tags = resolveRuntimeValue('tags', resolveRuntimeValue('cucumber.filter.tags', null))
+    if (tags != null) {
+        tags = tags.trim()
+        if (!tags.isEmpty()) {
+            task.systemProperty('cucumber.filter.tags', tags)
+            logger.lifecycle("cucumber.filter.tags='${tags}'")
+        } else {
+            logger.warn("Provided tags are blank. Running without explicit cucumber.filter.tags override.")
+        }
+    }
+}
+
+def configureCucumberTask = { Test task ->
+    task.useTestNG()
+    task.testClassesDirs = sourceSets.test.output.classesDirs
+    task.classpath = sourceSets.test.runtimeClasspath
+
+    task.testLogging {
+        events 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+        showStandardStreams = true
+    }
+}
+
+tasks.register('cucumberTest', Test) {
+    group = 'verification'
+    description = 'Runs Cucumber TestNG suite with optional tag and suite overrides.'
+
+    configureCucumberTask(delegate as Test)
+
+    doFirst {
+        List<File> suiteFiles = resolveSuiteFiles()
+        options.suiteXmlFiles = suiteFiles
+        logger.lifecycle("Using TestNG suite file(s): ${suiteFiles*.path.join(', ')}")
+
+        String selectedSuiteFile = resolveRuntimeValue('suiteFile', DEFAULT_SUITE_FILE)
+        systemProperty('suiteFile', selectedSuiteFile)
+
+        String browser = resolveMandatoryBrowser()
+        systemProperty('browser', browser)
+        logger.lifecycle("browser='${browser}'")
+
+        applyCommonCucumberRuntimeProps(delegate as Test)
+
+        String features = resolveRuntimeValue('features', null)
+        if (features != null && !features.trim().isEmpty()) {
+            systemProperty('cucumber.features', features.trim())
+            logger.lifecycle("cucumber.features='${features.trim()}'")
+        }
+    }
+}
+
+tasks.register('cucumberRerun', Test) {
+    group = 'verification'
+    description = 'Re-runs only failed Cucumber scenarios from build/rerun/master.txt.'
+
+    configureCucumberTask(delegate as Test)
+
+    doFirst {
+        List<File> suiteFiles = resolveSuiteFiles()
+        options.suiteXmlFiles = suiteFiles
+        logger.lifecycle("Using TestNG suite file(s): ${suiteFiles*.path.join(', ')}")
+
+        String selectedSuiteFile = resolveRuntimeValue('suiteFile', DEFAULT_SUITE_FILE)
+        systemProperty('suiteFile', selectedSuiteFile)
+
+        String browser = resolveMandatoryBrowser()
+        systemProperty('browser', browser)
+        logger.lifecycle("browser='${browser}'")
+
+        applyCommonCucumberRuntimeProps(delegate as Test)
+
+        File rerunFile = file('build/rerun/master.txt')
+        if (!rerunFile.exists() || rerunFile.length() == 0) {
+            throw new GradleException(
+                    "Rerun file not found or empty at ${rerunFile.path}. No failed scenarios available for rerun."
+            )
+        }
+
+        systemProperty('rerun.execution', 'true')
+        systemProperty('cucumber.features', '@' + rerunFile.path.replace('\\', '/'))
+        logger.lifecycle("rerun.execution='true'")
+        logger.lifecycle("cucumber.features='@${rerunFile.path.replace('\\', '/')}'")
+    }
+}
+
 test {
     useTestNG()
+
+    // Keep standard test task behavior aligned with framework runtime options.
+    doFirst {
+        applyCommonCucumberRuntimeProps(delegate as Test)
+    }
 }

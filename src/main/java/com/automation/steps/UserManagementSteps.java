@@ -6,7 +6,6 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import java.util.Map;
 import org.testng.Assert;
 
 public class UserManagementSteps {
@@ -22,7 +21,7 @@ public class UserManagementSteps {
         LoggerUtil.info("Step: User clicks on Add button");
         adminUserManagementPage.clickAddUserButton();
     }
-    
+
     @When("Search user {string} in user management")
     public void searchUserInUserManagement(String username) {
         LoggerUtil.info("Step: Search user in user management: " + username);
@@ -41,10 +40,13 @@ public class UserManagementSteps {
     @And("Search users in user management list")
     public void searchUsersInUserManagementList(DataTable dataTable) {
         LoggerUtil.info("Step: Search users in user management list");
-        for (Map<String, String> row : dataTable.asMaps(String.class, String.class)) {
-            searchUserInUserManagement(row.get("UserName"));
-            userShouldBeVisibleInTheUserManagementList(row.get("UserName"));
-        }
+
+        dataTable.asMaps(String.class, String.class)
+                .stream()
+                .map(row -> row.get("UserName"))
+                .forEach(username -> {
+                    searchUserInUserManagement(username);
+                    userShouldBeVisibleInTheUserManagementList(username);
+                });
     }
-    
 }

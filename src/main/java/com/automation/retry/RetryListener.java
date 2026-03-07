@@ -7,11 +7,11 @@ public class RetryListener implements ITestListener {
 
     @Override
     public void onTestStart(ITestResult result) {
-        RetryTracker.recordStart();
+        RetryComponents.metrics().recordStart();
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        RetryTracker.recordFailure();
+        RetryComponents.metrics().recordFailure();
     }
 }

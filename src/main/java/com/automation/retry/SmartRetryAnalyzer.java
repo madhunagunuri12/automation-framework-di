@@ -7,9 +7,7 @@ public class SmartRetryAnalyzer implements IRetryAnalyzer {
 
     @Override
     public boolean retry(ITestResult result) {
-        // We do NOT want immediate retries.
-        // The framework handles reruns via a separate execution phase (ReportGenerator -> cucumberRerun task).
-        // Returning false ensures the test fails immediately and moves to the next one.
-        return false;
+        int currentAttempt = result.getMethod().getCurrentInvocationCount();
+        return RetryComponents.policy().canRetry(currentAttempt);
     }
 }

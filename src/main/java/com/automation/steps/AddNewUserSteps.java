@@ -32,7 +32,7 @@ public class AddNewUserSteps {
     }
 
     @And("User enters Employee Name {string}")
-    public void userEntersEmployeeName(String employeeName) throws Exception {
+    public void userEntersEmployeeName(String employeeName) {
         LoggerUtil.info("Step: User enters Employee Name: " + employeeName);
         addUserPage.enterEmployeeName(employeeName);
     }

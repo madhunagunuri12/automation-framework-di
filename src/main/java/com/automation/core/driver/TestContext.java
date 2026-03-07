@@ -9,13 +9,13 @@ public class TestContext {
 
     public TestContext() {
         this.driverManager = new DriverManager();
-        this.driver = driverManager.getDriver();
+        this.driver = this.driverManager.getDriver();
     }
 
     public WebDriver getDriver() {
         return driver;
     }
-    
+
     public DriverManager getDriverManager() {
         return driverManager;
     }

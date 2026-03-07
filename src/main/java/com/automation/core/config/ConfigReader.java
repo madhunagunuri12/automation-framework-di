@@ -2,11 +2,12 @@ package com.automation.core.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Properties;
 
 public final class ConfigReader {
     private static final String PROPERTY_FILE = "config.properties";
-    private static Properties properties;
+    private static volatile Properties properties;
 
     static {
         loadProperties();
@@ -26,27 +27,44 @@ public final class ConfigReader {
             loadedProperties.putAll(System.getProperties());
             properties = loadedProperties;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load properties file: " + PROPERTY_FILE, e);
+            throw new IllegalStateException("Failed to load properties file: " + PROPERTY_FILE, e);
         }
     }
 
     public static String getProperty(String key) {
+        return getOptionalProperty(key).orElse(null);
+    }
+
+    public static String getRequiredProperty(String key) {
+        return getOptionalProperty(key)
+                .orElseThrow(new java.util.function.Supplier<IllegalStateException>() {
+                    @Override
+                    public IllegalStateException get() {
+                        return new IllegalStateException("Missing required property: " + key);
+                    }
+                });
+    }
+
+    public static String getPropertyOrDefault(String key, String defaultValue) {
+        return getOptionalProperty(key).orElse(defaultValue);
+    }
+
+    public static int getIntProperty(String key, int defaultValue) {
+        return getOptionalProperty(key)
+                .map(Integer::parseInt)
+                .orElse(defaultValue);
+    }
+
+    public static boolean getBooleanProperty(String key, boolean defaultValue) {
+        return getOptionalProperty(key)
+                .map(Boolean::parseBoolean)
+                .orElse(defaultValue);
+    }
+
+    public static Optional<String> getOptionalProperty(String key) {
         if (properties == null) {
             loadProperties();
         }
-        return properties.getProperty(key);
-    }
-
-    @Deprecated
-    public static void loadPropeties() {
-        loadProperties();
-    }
-
-    @Deprecated
-    public static void setProperty(String key, String value) {
-        if (properties == null) {
-            loadProperties();
-        }
-        properties.setProperty(key, value);
+        return Optional.ofNullable(properties.getProperty(key));
     }
 }
