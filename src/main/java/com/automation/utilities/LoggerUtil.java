@@ -1,31 +1,28 @@
 package com.automation.utilities;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+@Deprecated
 public final class LoggerUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerUtil.class);
 
     private LoggerUtil() {
     }
 
     public static void info(String message) {
-        LOGGER.info(message);
-        StepLogBuffer.append("INFO: " + message);
+        com.automation.core.logging.LoggerUtil.info(message);
     }
 
     public static void warn(String message) {
-        LOGGER.warn(message);
-        StepLogBuffer.append("WARN: " + message);
+        com.automation.core.logging.LoggerUtil.warn(message);
+    }
+
+    public static void debug(String message) {
+        com.automation.core.logging.LoggerUtil.debug(message);
     }
 
     public static void error(String message) {
-        LOGGER.error(message);
-        StepLogBuffer.append("ERROR: " + message);
+        com.automation.core.logging.LoggerUtil.error(message);
     }
 
-    public static void error(String message, Throwable t) {
-        LOGGER.error(message, t);
-        StepLogBuffer.append("ERROR: " + message + " - " + t.getMessage());
+    public static void error(String message, Throwable throwable) {
+        com.automation.core.logging.LoggerUtil.error(message, throwable);
     }
 }

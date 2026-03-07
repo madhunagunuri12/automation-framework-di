@@ -3,6 +3,7 @@ package com.automation.steps;
 import com.automation.core.base.Constants;
 import com.automation.core.config.ConfigReader;
 import com.automation.core.driver.TestContext;
+import com.automation.core.logging.LogContext;
 import com.automation.core.logging.LoggerUtil;
 import com.automation.core.logging.StepLogBuffer;
 import com.automation.transformers.CucumberInterceptor;
@@ -25,6 +26,8 @@ public class Hooks {
 
     @Before(order = 0)
     public void setUp(Scenario scenario) {
+        LogContext.clear();
+        LogContext.put("scenario", scenario.getName());
         LoggerUtil.info("Starting Scenario: " + scenario.getName());
         TestDataStore.clear(); // Clear data store for new scenario
         testContext.getDriver().get(ConfigReader.getProperty(Constants.login.URL));
@@ -59,8 +62,12 @@ public class Hooks {
 
     @After(order = 1)
     public void tearDown(Scenario scenario) {
-        LoggerUtil.info("Finished Scenario: " + scenario.getName() + " [Status: " + scenario.getStatus() + "]");
-        TestDataStore.clear(); // Clean up
-        testContext.getDriverManager().quitDriver();
+        try {
+            LoggerUtil.info("Finished Scenario: " + scenario.getName() + " [Status: " + scenario.getStatus() + "]");
+            TestDataStore.clear(); // Clean up
+            testContext.getDriverManager().quitDriver();
+        } finally {
+            LogContext.clear();
+        }
     }
 }

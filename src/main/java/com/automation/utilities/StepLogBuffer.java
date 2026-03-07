@@ -1,21 +1,20 @@
 package com.automation.utilities;
 
+@Deprecated
 public final class StepLogBuffer {
-
-    private static final ThreadLocal<StringBuilder> BUFFER = ThreadLocal.withInitial(StringBuilder::new);
 
     private StepLogBuffer() {
     }
 
     public static void append(String message) {
-        BUFFER.get().append(message).append(System.lineSeparator());
+        com.automation.core.logging.StepLogBuffer.append(message);
     }
 
     public static String getLogs() {
-        return BUFFER.get().toString();
+        return com.automation.core.logging.StepLogBuffer.getLogs();
     }
 
     public static void clear() {
-        BUFFER.get().setLength(0);
+        com.automation.core.logging.StepLogBuffer.clear();
     }
 }
