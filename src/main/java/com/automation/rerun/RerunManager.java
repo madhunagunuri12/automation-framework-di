@@ -1,8 +1,8 @@
 package com.automation.rerun;
 
+import com.automation.core.logging.LoggerUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,31 +18,26 @@ public final class RerunManager {
 
     private static final String RERUN_DIR = "build/rerun";
     private static final String MASTER_RERUN = "build/rerun/master.txt";
-    // Report will be generated here and NOT deleted at the end
     private static final String FIRST_RUN_DIR = "build/first-run-report";
 
     private RerunManager() {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    /**
-     * Cleans up artifacts from previous runs.
-     */
     public static void cleanPreviousRunArtifacts() {
-        System.out.println("🧹 RerunManager: Starting cleanup in build/...");
+        LoggerUtil.info("RerunManager: Starting cleanup in build/...");
         deleteDirectory(Paths.get(FIRST_RUN_DIR));
         deleteDirectory(Paths.get(RERUN_DIR));
         deleteDirectory(Paths.get("build/cucumber-reports"));
         deleteDirectory(Paths.get("build/first-run"));
         deleteDirectory(Paths.get("build/temp-first-run-jsons"));
-        
-        // Cleanup old zip if exists
+
         File zip = new File("build/first-run-report.zip");
-        if (zip.exists()) {
-            zip.delete();
+        if (zip.exists() && !zip.delete()) {
+            LoggerUtil.warn("RerunManager: Failed to delete old zip: " + zip.getAbsolutePath());
         }
-        
-        System.out.println("🧹 RerunManager: Cleanup completed.");
+
+        LoggerUtil.info("RerunManager: Cleanup completed.");
     }
 
     private static void deleteDirectory(Path path) {
@@ -54,11 +49,11 @@ public final class RerunManager {
                             try {
                                 Files.delete(p);
                             } catch (IOException e) {
-                                // ignore
+                                LoggerUtil.warn("Failed to delete path during cleanup: " + p);
                             }
                         });
             } catch (IOException e) {
-                e.printStackTrace();
+                LoggerUtil.error("Failed to cleanup directory: " + path, e);
             }
         }
     }
@@ -86,7 +81,7 @@ public final class RerunManager {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LoggerUtil.error("Failed to parse scenario count from json: " + path, e);
             }
         }
         return total;
@@ -94,7 +89,7 @@ public final class RerunManager {
 
     public static List<String> getFailedScenarios(List<String> jsonPaths) {
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, Boolean> scenarioStatus = new HashMap<>();
+        Map<String, Boolean> scenarioStatus = new HashMap<String, Boolean>();
 
         for (String path : jsonPaths) {
             File jsonFile = new File(path);
@@ -113,7 +108,7 @@ public final class RerunManager {
                                 String key = uri + ":" + element.get("line").asInt();
                                 boolean passed = isScenarioPassed(element);
                                 if (scenarioStatus.getOrDefault(key, false)) {
-                                    continue; 
+                                    continue;
                                 }
                                 scenarioStatus.put(key, passed);
                             }
@@ -121,10 +116,10 @@ public final class RerunManager {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LoggerUtil.error("Failed to parse failed scenarios from json: " + path, e);
             }
         }
-        
+
         return scenarioStatus.entrySet().stream()
                 .filter(entry -> !entry.getValue())
                 .map(Map.Entry::getKey)

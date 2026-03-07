@@ -18,4 +18,8 @@ public final class StepLogBuffer {
     public static void clear() {
         BUFFER.get().setLength(0);
     }
+
+    public static void clearAndRemove() {
+        BUFFER.remove();
+    }
 }

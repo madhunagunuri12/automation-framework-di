@@ -18,13 +18,12 @@ public final class CucumberInterceptor {
 
     public static void beforeStep(Scenario scenario) {
         try {
-            // Clear cache for the new step to ensure consistency within the step, 
-            // but fresh values for new steps (unless we want to cache per scenario? No, per step is safer for randoms)
+            // Cache is step-scoped; clear before each new step execution.
             DataTableCellTransform.clearCache();
-            
+
             Object testCaseState = ReflectionUtils.getFieldReferenceObject(scenario, "delegate");
             if (testCaseState == null) {
-                LoggerUtil.error("DEBUG: testCaseState is null");
+                LoggerUtil.debug("CucumberInterceptor: testCaseState is null");
                 return;
             }
 
@@ -32,14 +31,12 @@ public final class CucumberInterceptor {
             UUID currentTestStepId = ReflectionUtils.getFieldReferenceObject(testCaseState, "currentTestStepId");
 
             PickleStepTestStep nextStep = getNextStep(currentTestStepId, testCase);
-
             if (nextStep != null) {
                 transformStepArguments(nextStep);
             }
 
         } catch (Exception e) {
-            LoggerUtil.error("CucumberInterceptor Error: " + e.getMessage());
-            e.printStackTrace();
+            LoggerUtil.error("CucumberInterceptor error", e);
         }
     }
 
@@ -76,7 +73,6 @@ public final class CucumberInterceptor {
 
         for (Object argument : arguments) {
             try {
-                // 1. Handle Expression Arguments (Regular Steps)
                 Object innerArgument = null;
                 try {
                     innerArgument = ReflectionUtils.getFieldReferenceObject(argument, "argument");
@@ -98,12 +94,10 @@ public final class CucumberInterceptor {
                     }
                 }
 
-                // 2. Handle Data Table Arguments
                 if (argument.getClass().getName().contains("DataTableArgument")) {
                     transformDataTable(argument, pickleStep);
                 }
 
-                // 3. Handle DocString Arguments
                 if (argument.getClass().getName().contains("DocStringArgument")) {
                     transformDocString(argument, pickleStep);
                 }
@@ -123,7 +117,7 @@ public final class CucumberInterceptor {
                     ReflectionUtils.setFieldReferenceObject(pickleStep, "text", finalStepText);
                 }
             } catch (Exception e) {
-                LoggerUtil.warn("INTERCEPTOR WARNING: Could not set 'text' field. Report might show original text.");
+                LoggerUtil.warn("Could not set transformed step text. Report may show original text.");
             }
         }
     }
@@ -148,9 +142,9 @@ public final class CucumberInterceptor {
             String newValue = DataTableCellTransform.handleDataTableCell(originalValue);
 
             if (!originalValue.equals(newValue)) {
-                LoggerUtil.info("DEBUG: Transforming '" + originalValue + "' to '" + newValue + "'");
+                LoggerUtil.debug("Transforming '" + originalValue + "' to '" + newValue + "'");
                 ReflectionUtils.setFieldReferenceObject(group, "value", newValue);
-                
+
                 stepTextBuilder.replace(newStart, newEnd, newValue);
                 int lengthDiff = newValue.length() - originalValue.length();
                 ReflectionUtils.setFieldReferenceObject(group, "end", newEnd + lengthDiff);
@@ -161,49 +155,40 @@ public final class CucumberInterceptor {
     }
 
     private static void transformDataTable(Object argument, Object pickleStep) throws Exception {
-        // DataTableArgument has a List<List<String>> argument (raw data)
         List<List<String>> rawData = ReflectionUtils.getFieldReferenceObject(argument, "argument");
 
-        // Transform the raw data
         List<List<String>> transformedData = rawData.stream()
                 .map(row -> row.stream()
                         .map(DataTableCellTransform::handleDataTableCell)
                         .collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
-        // Update the argument object with transformed data
         ReflectionUtils.setFieldReferenceObject(argument, "argument", transformedData);
 
-        // Also update the PickleStep's DataTable if possible (for report)
         try {
             Object innerPickleStep = ReflectionUtils.getFieldReferenceObject(pickleStep, "pickleStep");
             Object stepArgument = ReflectionUtils.getFieldReferenceObject(
                     innerPickleStep != null ? innerPickleStep : pickleStep, "argument");
 
             if (stepArgument != null) {
-                // PickleStepArgument has 'dataTable' field
                 Object dataTable = null;
                 try {
                     dataTable = ReflectionUtils.getFieldReferenceObject(stepArgument, "dataTable");
-                } catch (Exception e) {
-                    // Try direct access if structure differs
+                } catch (Exception ignored) {
+                    // Ignore structure mismatch
                 }
 
                 if (dataTable != null) {
                     List<?> rows = ReflectionUtils.getFieldReferenceObject(dataTable, "rows");
                     if (rows != null) {
-                        // Iterate rows and update cells
                         for (int i = 0; i < rows.size(); i++) {
                             Object row = rows.get(i);
                             List<?> cells = ReflectionUtils.getFieldReferenceObject(row, "cells");
                             for (int j = 0; j < cells.size(); j++) {
                                 Object cell = cells.get(j);
                                 String newValue = transformedData.get(i).get(j);
-                                
-                                // Only update if changed
                                 String oldValue = (String) ReflectionUtils.getFieldReferenceObject(cell, "value");
                                 if (!oldValue.equals(newValue)) {
-                                    // LoggerUtil.info("DEBUG: Updating cell [" + i + "][" + j + "] to " + newValue);
                                     ReflectionUtils.setFieldReferenceObject(cell, "value", newValue);
                                 }
                             }
@@ -223,7 +208,6 @@ public final class CucumberInterceptor {
         if (!content.equals(newContent)) {
             ReflectionUtils.setFieldReferenceObject(argument, "content", newContent);
 
-            // Update PickleStep DocString for report
             try {
                 Object innerPickleStep = ReflectionUtils.getFieldReferenceObject(pickleStep, "pickleStep");
                 Object stepArgument = ReflectionUtils.getFieldReferenceObject(
@@ -233,18 +217,17 @@ public final class CucumberInterceptor {
                     Object docString = null;
                     try {
                         docString = ReflectionUtils.getFieldReferenceObject(stepArgument, "docString");
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                         // Ignore
                     }
-                    
+
                     if (docString != null) {
                         ReflectionUtils.setFieldReferenceObject(docString, "content", newContent);
                     } else if (stepArgument.getClass().getName().contains("PickleDocString")) {
-                        // Fallback for older structures
                         ReflectionUtils.setFieldReferenceObject(stepArgument, "content", newContent);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
                 // Ignore
             }
         }

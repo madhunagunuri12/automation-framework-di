@@ -1,36 +1,34 @@
 package com.automation.core.config;
 
+import com.automation.core.logging.LoggerUtil;
+
 public final class CucumberPlugins {
-    // Prevent instantiation
     private CucumberPlugins() {
         throw new IllegalStateException("Utility class");
     }
 
     public static final String PRETTY = "pretty";
     public static final String HTML_REPORT = "html:build/cucumber-html-report";
+    public static final String RERUN_OUTPUT = "rerun:build/rerun/cucumber-failures.txt";
 
     public static String fullPluginList(String jsonFileName) {
-
-        System.out.println("DEBUG: rerun : status :  " + System.getProperty("rerun.execution"));
-        boolean isRerun =
-                System.getProperty("rerun.execution") != null;
+        boolean isRerun = System.getProperty("rerun.execution") != null;
+        LoggerUtil.info("Cucumber plugin mode: " + (isRerun ? "rerun" : "first-run"));
 
         if (isRerun) {
-            // Rerun output
             return String.join(",",
                     PRETTY,
                     HTML_REPORT,
                     "json:build/cucumber-rerun.json",
-                    "rerun:build/rerun/cucumber-failures.txt" // Separate file for raw cucumber output
+                    RERUN_OUTPUT
             );
         }
 
-        // First run output
         return String.join(",",
                 PRETTY,
                 HTML_REPORT,
                 "json:build/" + jsonFileName,
-                "rerun:build/rerun/cucumber-failures.txt" // Separate file for raw cucumber output
+                RERUN_OUTPUT
         );
     }
 }

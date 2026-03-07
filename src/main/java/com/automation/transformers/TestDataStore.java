@@ -4,8 +4,11 @@ import com.automation.core.logging.LoggerUtil;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestDataStore {
+public final class TestDataStore {
     private static final ThreadLocal<Map<String, Object>> DATA = ThreadLocal.withInitial(HashMap::new);
+
+    private TestDataStore() {
+    }
 
     public static void put(String key, Object value) {
         LoggerUtil.info("TestDataStore: PUT " + key + " = " + value);
@@ -20,5 +23,9 @@ public class TestDataStore {
 
     public static void clear() {
         DATA.get().clear();
+    }
+
+    public static void clearAndRemove() {
+        DATA.remove();
     }
 }

@@ -29,4 +29,8 @@ public final class LogContext {
     public static void clear() {
         CONTEXT.get().clear();
     }
+
+    public static void clearAndRemove() {
+        CONTEXT.remove();
+    }
 }

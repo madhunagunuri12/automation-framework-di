@@ -30,30 +30,27 @@ public class Hooks {
         LogContext.put("scenario", scenario.getName());
         LoggerUtil.info("Starting Scenario: " + scenario.getName());
         TestDataStore.clear(); // Clear data store for new scenario
-        testContext.getDriver().get(ConfigReader.getProperty(Constants.login.URL));
+        testContext.getDriver().get(ConfigReader.getRequiredProperty(Constants.login.URL));
     }
 
     @BeforeStep
     public void beforeStep(Scenario scenario) {
         StepLogBuffer.clear();
-        // Intercept and transform data before the step executes
         CucumberInterceptor.beforeStep(scenario);
     }
 
     @AfterStep
     @SuppressWarnings("unused")
     public void afterStep(Scenario scenario) {
-        // Attach Screenshot
         try {
             byte[] screenshot = ((TakesScreenshot) testContext.getDriver()).getScreenshotAs(OutputType.BYTES);
             if (screenshot != null && screenshot.length > 0) {
                 scenario.attach(screenshot, "image/png", "Screenshot");
             }
         } catch (Exception e) {
-            // Ignore
+            // Ignore screenshot failure so we do not hide actual step outcomes.
         }
 
-        // Attach Logs
         String logs = StepLogBuffer.getLogs();
         if (logs != null && !logs.isEmpty()) {
             scenario.attach(logs, "text/plain", "Output");
@@ -64,10 +61,11 @@ public class Hooks {
     public void tearDown(Scenario scenario) {
         try {
             LoggerUtil.info("Finished Scenario: " + scenario.getName() + " [Status: " + scenario.getStatus() + "]");
-            TestDataStore.clear(); // Clean up
+            TestDataStore.clearAndRemove();
             testContext.getDriverManager().quitDriver();
         } finally {
-            LogContext.clear();
+            StepLogBuffer.clearAndRemove();
+            LogContext.clearAndRemove();
         }
     }
 }
