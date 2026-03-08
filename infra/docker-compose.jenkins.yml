@@ -22,7 +22,7 @@ services:
       SEED_REPO_BRANCH: "${SEED_REPO_BRANCH:-master}"
       SEED_CREDENTIALS_ID: "${SEED_CREDENTIALS_ID:-}"
       SEED_JOB_CONFIG_GLOB: "${SEED_JOB_CONFIG_GLOB:-infra/jenkins/jobs/*.yml}"
-      SEED_DSL_SCRIPT: "${SEED_DSL_SCRIPT:-infra/jenkins/job-dsl/jobs-from-yaml.groovy}"
+      SEED_DSL_SCRIPT: "${SEED_DSL_SCRIPT:-infra/jenkins/job-dsl/jobs_from_yaml.groovy}"
       SEED_PIPELINE_TEMPLATE: "${SEED_PIPELINE_TEMPLATE:-infra/jenkins/pipelines/cucumber-job-template.groovy}"
     volumes:
       - jenkins_home:/var/jenkins_home

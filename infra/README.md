@@ -32,7 +32,7 @@ Credentials secret stays in Jenkins Credentials store, not in job parameters.
 - `infra/docker-compose.jenkins.yml`: Jenkins container with Docker CLI/Compose and non-8080 host mapping.
 - `infra/jenkins/casc/jenkins.yaml`: JCasC baseline + auto-load seed job.
 - `infra/jenkins/casc/jobs/seed-job.groovy`: Seed job definition (uses env, no sensitive params).
-- `infra/jenkins/job-dsl/jobs-from-yaml.groovy`: Reads YAML and generates pipeline jobs.
+- `infra/jenkins/job-dsl/jobs_from_yaml.groovy`: Reads YAML and generates pipeline jobs.
 - `infra/jenkins/jobs/*.yml`: Per-job runtime defaults (`browser`, `suiteFile`, tags, execution mode, grid URL, node scale).
 - `infra/jenkins/pipelines/cucumber-job-template.groovy`: Shared generated job pipeline logic.
 

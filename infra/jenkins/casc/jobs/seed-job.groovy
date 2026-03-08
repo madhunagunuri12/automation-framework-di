@@ -63,7 +63,7 @@ pipeline {
             steps {
                 script {
                     String jobConfigGlob = env.JOB_CONFIG_GLOB?.trim() ? env.JOB_CONFIG_GLOB.trim() : 'infra/jenkins/jobs/*.yml'
-                    String dslScript = env.DSL_SCRIPT?.trim() ? env.DSL_SCRIPT.trim() : 'infra/jenkins/job-dsl/jobs-from-yaml.groovy'
+                    String dslScript = env.DSL_SCRIPT?.trim() ? env.DSL_SCRIPT.trim() : 'infra/jenkins/job-dsl/jobs_from_yaml.groovy'
                     String pipelineTemplate = env.PIPELINE_TEMPLATE?.trim() ? env.PIPELINE_TEMPLATE.trim() : 'infra/jenkins/pipelines/cucumber-job-template.groovy'
                     String branch = env.REPO_BRANCH?.trim() ? env.REPO_BRANCH.trim() : 'master'
                     String creds = env.CREDENTIALS_ID?.trim() ? env.CREDENTIALS_ID.trim() : ''
