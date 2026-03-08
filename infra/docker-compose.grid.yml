@@ -1,0 +1,73 @@
+name: automation-grid
+
+x-test-env: &test-env
+  BROWSER: "${BROWSER:-chrome}"
+  CUCUMBER_TAGS: "${CUCUMBER_TAGS:-@FullRun}"
+  SUITE_FILE: "${SUITE_FILE:-testng.xml}"
+  EXECUTION_MODE: "${EXECUTION_MODE:-remote}"
+  GRID_URL: "${GRID_URL:-http://selenium-hub:4444/wd/hub}"
+
+services:
+  selenium-hub:
+    image: selenium/hub:4.28.1
+    container_name: selenium-hub
+    restart: unless-stopped
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+    environment:
+      SE_GRID_MAX_SESSION: "${GRID_MAX_SESSIONS:-16}"
+      SE_SESSION_REQUEST_TIMEOUT: "${SE_SESSION_REQUEST_TIMEOUT:-300}"
+      SE_SESSION_RETRY_INTERVAL: "${SE_SESSION_RETRY_INTERVAL:-2}"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/4444'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - automation-net
+
+  chrome:
+    image: selenium/node-chrome:4.28.1
+    shm_size: "2gb"
+    restart: unless-stopped
+    depends_on:
+      selenium-hub:
+        condition: service_healthy
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: "4442"
+      SE_EVENT_BUS_SUBSCRIBE_PORT: "4443"
+      SE_NODE_MAX_SESSIONS: "${SE_NODE_MAX_SESSIONS:-1}"
+      SE_NODE_OVERRIDE_MAX_SESSIONS: "true"
+      SE_NODE_SESSION_TIMEOUT: "${SE_NODE_SESSION_TIMEOUT:-300}"
+    networks:
+      - automation-net
+
+  test-runner:
+    profiles: ["runner"]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.test-runner
+    depends_on:
+      selenium-hub:
+        condition: service_healthy
+    environment:
+      <<: *test-env
+    entrypoint: ["bash", "-lc"]
+    command: >-
+      ./gradlew clean cucumberTest --no-daemon
+      -Dbrowser="$${BROWSER}"
+      -Dcucumber.filter.tags="$${CUCUMBER_TAGS}"
+      -DsuiteFile="$${SUITE_FILE}"
+      -Dexecution="$${EXECUTION_MODE}"
+      -Dgrid.url="$${GRID_URL}"
+    networks:
+      - automation-net
+
+networks:
+  automation-net:
+    name: automation-net
+    driver: bridge

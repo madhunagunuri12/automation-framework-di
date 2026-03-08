@@ -1,0 +1,22 @@
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /workspace
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
+
+RUN useradd -ms /bin/bash gradle \
+    && mkdir -p /home/gradle/.gradle /workspace \
+    && chown -R gradle:gradle /home/gradle /workspace
+
+COPY gradlew gradlew
+COPY gradlew.bat gradlew.bat
+COPY gradle gradle
+COPY settings.gradle settings.gradle
+COPY build.gradle build.gradle
+COPY src src
+
+RUN chmod +x gradlew \
+    && chown -R gradle:gradle /workspace
+
+USER gradle
+ENTRYPOINT ["bash", "-lc"]
+CMD ["./gradlew clean cucumberTest --no-daemon -Dbrowser=\"${BROWSER:-chrome}\" -Dcucumber.filter.tags=\"${CUCUMBER_TAGS:-@FullRun}\" -DsuiteFile=\"${SUITE_FILE:-testng.xml}\" -Dexecution=\"${EXECUTION_MODE:-remote}\" -Dgrid.url=\"${GRID_URL:-http://selenium-hub:4444/wd/hub}\""]

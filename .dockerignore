@@ -1,0 +1,8 @@
+.git
+.idea
+.codex
+.gradle
+build
+out
+**/*.iml
+**/*.log

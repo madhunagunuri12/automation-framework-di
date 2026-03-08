@@ -1,0 +1,14 @@
+workflow-aggregator
+git
+github
+gitlab-plugin
+pipeline-utility-steps
+junit
+timestamper
+ansicolor
+credentials-binding
+configuration-as-code
+matrix-auth
+job-dsl
+ws-cleanup
+snakeyaml-api

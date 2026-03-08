@@ -1,0 +1,10 @@
+jobName: "ui-user-management-headless"
+description: "User management regression on Grid with headless chrome"
+disabled: false
+gradle:
+  browser: "headless-chrome"
+  suiteFile: "testng.xml"
+  tags: "@user-management"
+  executionMode: "remote"
+  gridUrl: "http://selenium-hub:4444/wd/hub"
+  chromeNodes: "4"

@@ -1,0 +1,10 @@
+jobName: "ui-fullrun-chrome"
+description: "UI full regression on Selenium Grid with Chrome"
+disabled: false
+gradle:
+  browser: "chrome"
+  suiteFile: "testng.xml"
+  tags: "@FullRun"
+  executionMode: "remote"
+  gridUrl: "http://selenium-hub:4444/wd/hub"
+  chromeNodes: "4"
