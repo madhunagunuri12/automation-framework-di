@@ -5,14 +5,24 @@ String repoBranch = (binding.hasVariable('repoBranch') ? binding.getVariable('re
 String credentialsId = (binding.hasVariable('credentialsId') ? binding.getVariable('credentialsId') : '').toString().trim()
 String jobConfigGlob = (binding.hasVariable('jobConfigGlob') ? binding.getVariable('jobConfigGlob') : 'infra/jenkins/jobs/*.yml').toString().trim()
 String pipelineTemplatePath = (binding.hasVariable('pipelineTemplatePath') ? binding.getVariable('pipelineTemplatePath') : 'infra/jenkins/pipelines/cucumber-job-template.groovy').toString().trim()
+String workspacePath = (binding.hasVariable('workspacePath') ? binding.getVariable('workspacePath') : '.').toString().trim()
 
 if (repoUrl.isEmpty()) {
     throw new IllegalArgumentException('repoUrl additional parameter is mandatory for job generation.')
 }
 
-File templateFile = new File(pipelineTemplatePath)
+File workspaceRoot = new File(workspacePath)
+if (!workspaceRoot.exists() || !workspaceRoot.isDirectory()) {
+    throw new IllegalStateException("Workspace path is invalid: ${workspacePath}")
+}
+
+File resolveWorkspaceFile(String relativePath) {
+    return new File(workspaceRoot, relativePath.replace('\\', File.separator))
+}
+
+File templateFile = resolveWorkspaceFile(pipelineTemplatePath)
 if (!templateFile.exists()) {
-    throw new IllegalStateException("Pipeline template not found: ${pipelineTemplatePath}")
+    throw new IllegalStateException("Pipeline template not found: ${templateFile.path}")
 }
 
 String pipelineTemplate = templateFile.getText('UTF-8')
@@ -26,7 +36,7 @@ List<String> resolveConfigFiles(String globPattern) {
         baseDirPath = '.'
     }
 
-    File baseDir = new File(baseDirPath)
+    File baseDir = resolveWorkspaceFile(baseDirPath)
     if (!baseDir.exists()) {
         return new ArrayList<String>()
     }
@@ -39,7 +49,7 @@ List<String> resolveConfigFiles(String globPattern) {
 
     List<String> matches = new ArrayList<String>()
     baseDir.eachFileRecurse { File file ->
-        String candidate = file.path.replace('\\', '/')
+        String candidate = workspaceRoot.toPath().relativize(file.toPath()).toString().replace('\\', '/')
         if (file.isFile() && candidate.matches(regex)) {
             matches.add(candidate)
         }
@@ -84,7 +94,7 @@ String escapeForGroovySingleQuote(String value) {
 }
 
 configFiles.each { String filePath ->
-    File configFile = new File(filePath)
+    File configFile = resolveWorkspaceFile(filePath)
     Map jobConfig = yaml.load(configFile.getText('UTF-8')) as Map
 
     if (jobConfig == null || jobConfig.isEmpty()) {

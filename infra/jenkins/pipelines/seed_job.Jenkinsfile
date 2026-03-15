@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     options {
+        skipDefaultCheckout(true)
         timestamps()
         ansiColor('xterm')
         disableConcurrentBuilds()
@@ -46,7 +47,8 @@ pipeline {
                             repoBranch: repoBranch,
                             credentialsId: credentialsId,
                             jobConfigGlob: params.JOB_CONFIG_GLOB,
-                            pipelineTemplatePath: params.PIPELINE_TEMPLATE
+                            pipelineTemplatePath: params.PIPELINE_TEMPLATE,
+                            workspacePath: pwd()
                         ]
                     )
                 }
