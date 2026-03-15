@@ -1,4 +1,3 @@
-import groovy.io.FileNameFinder
 import org.yaml.snakeyaml.Yaml
 
 String repoUrl = (binding.hasVariable('repoUrl') ? binding.getVariable('repoUrl') : '').toString().trim()
@@ -17,7 +16,38 @@ if (!templateFile.exists()) {
 }
 
 String pipelineTemplate = templateFile.getText('UTF-8')
-List<String> configFiles = new FileNameFinder().getFileNames('.', jobConfigGlob).sort()
+
+List<String> resolveConfigFiles(String globPattern) {
+    String normalized = globPattern.replace('\\', '/')
+    int wildcardIndex = normalized.indexOf('*')
+    String baseDirPath = wildcardIndex >= 0 ? normalized.substring(0, wildcardIndex) : normalized
+    baseDirPath = baseDirPath.replaceAll('/+$', '')
+    if (baseDirPath.isEmpty()) {
+        baseDirPath = '.'
+    }
+
+    File baseDir = new File(baseDirPath)
+    if (!baseDir.exists()) {
+        return new ArrayList<String>()
+    }
+
+    String regex = '^' + normalized
+            .replace('.', '\\.')
+            .replace('**/', '(.*/)?')
+            .replace('**', '.*')
+            .replace('*', '[^/]*') + '$'
+
+    List<String> matches = new ArrayList<String>()
+    baseDir.eachFileRecurse { File file ->
+        String candidate = file.path.replace('\\', '/')
+        if (file.isFile() && candidate.matches(regex)) {
+            matches.add(candidate)
+        }
+    }
+    return matches.sort()
+}
+
+List<String> configFiles = resolveConfigFiles(jobConfigGlob)
 
 if (configFiles.isEmpty()) {
     throw new IllegalStateException("No job YAML files found with glob: ${jobConfigGlob}")
