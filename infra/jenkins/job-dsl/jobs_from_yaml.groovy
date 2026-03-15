@@ -16,8 +16,8 @@ if (!workspaceRoot.exists() || !workspaceRoot.isDirectory()) {
     throw new IllegalStateException("Workspace path is invalid: ${workspacePath}")
 }
 
-File resolveWorkspaceFile(String relativePath) {
-    return new File(workspaceRoot, relativePath.replace('\\', File.separator))
+def resolveWorkspaceFile = { String relativePath ->
+    new File(workspaceRoot, relativePath.replace('\\', File.separator))
 }
 
 File templateFile = resolveWorkspaceFile(pipelineTemplatePath)
@@ -27,7 +27,7 @@ if (!templateFile.exists()) {
 
 String pipelineTemplate = templateFile.getText('UTF-8')
 
-List<String> resolveConfigFiles(String globPattern) {
+def resolveConfigFiles = { String globPattern ->
     String normalized = globPattern.replace('\\', '/')
     int wildcardIndex = normalized.indexOf('*')
     String baseDirPath = wildcardIndex >= 0 ? normalized.substring(0, wildcardIndex) : normalized
@@ -54,7 +54,7 @@ List<String> resolveConfigFiles(String globPattern) {
             matches.add(candidate)
         }
     }
-    return matches.sort()
+    matches.sort()
 }
 
 List<String> configFiles = resolveConfigFiles(jobConfigGlob)
