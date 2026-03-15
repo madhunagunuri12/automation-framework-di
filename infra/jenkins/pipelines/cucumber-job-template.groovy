@@ -55,7 +55,7 @@ local''', description: 'Execution mode.')
                     if (!params.SUITE_FILE?.trim()) {
                         error('SUITE_FILE is mandatory and cannot be blank.')
                     }
-                    if (!(params.CHROME_NODES ==~ /^[1-9]\\d*$/)) {
+                    if (!(params.CHROME_NODES?.trim() ==~ /^[1-9]\d*$/)) {
                         error("CHROME_NODES must be a positive integer. Current value: ${params.CHROME_NODES}")
                     }
                     env.TEST_RUNNER_CONTAINER = ("test-runner-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}").replaceAll('[^A-Za-z0-9_.-]', '-')
@@ -128,3 +128,4 @@ local''', description: 'Execution mode.')
         }
     }
 }
+
