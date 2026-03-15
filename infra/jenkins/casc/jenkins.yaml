@@ -16,6 +16,3 @@ jenkins:
 unclassified:
   location:
     url: "${JENKINS_URL:-http://localhost:8090/}"
-
-jobs:
-  - file: /var/jenkins_home/casc_configs/jobs/seed-job.groovy

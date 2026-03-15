@@ -1,6 +1,6 @@
 # Job YAML Schema
 
-Each file in this folder creates one Jenkins pipeline job through the DSL seed flow.
+Each file in this folder creates one Jenkins pipeline job through the SCM-backed `seed-jobs` flow.
 
 ## Required
 
