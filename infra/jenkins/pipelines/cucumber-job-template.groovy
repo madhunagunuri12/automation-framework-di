@@ -74,11 +74,11 @@ local''', description: 'Execution mode.')
 
         stage('Start Selenium Grid') {
             steps {
-                sh '''
+                sh """
                     set -e
                     docker compose -f ${GRID_COMPOSE_FILE} down --remove-orphans || true
-                    docker compose -f ${GRID_COMPOSE_FILE} up -d --scale chrome=${CHROME_NODES}
-                '''
+                    docker compose -f ${GRID_COMPOSE_FILE} up -d --scale chrome=${params.CHROME_NODES}
+                """
                 script {
                     timeout(time: 3, unit: 'MINUTES') {
                         waitUntil {
