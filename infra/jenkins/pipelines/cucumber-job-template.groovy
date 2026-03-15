@@ -8,10 +8,17 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'BROWSER', choices: ['__DEFAULT_BROWSER__', 'chrome', 'headless-chrome', 'firefox', 'headless-firefox', 'edge'].unique(), description: 'Mandatory browser for framework execution.')
+        choice(name: 'BROWSER', choices: '''__DEFAULT_BROWSER__
+chrome
+headless-chrome
+firefox
+headless-firefox
+edge''', description: 'Mandatory browser for framework execution.')
         string(name: 'CUCUMBER_TAGS', defaultValue: '__DEFAULT_TAGS__', description: 'Tag expression for Cucumber filter.')
         string(name: 'SUITE_FILE', defaultValue: '__DEFAULT_SUITE_FILE__', description: 'Suite file (e.g., testng.xml or suites/testng.xml).')
-        choice(name: 'EXECUTION_MODE', choices: ['__DEFAULT_EXECUTION__', 'remote', 'local'].unique(), description: 'Execution mode.')
+        choice(name: 'EXECUTION_MODE', choices: '''__DEFAULT_EXECUTION__
+remote
+local''', description: 'Execution mode.')
         string(name: 'GRID_URL', defaultValue: '__DEFAULT_GRID_URL__', description: 'Selenium Grid URL reachable from test container.')
         string(name: 'CHROME_NODES', defaultValue: '__DEFAULT_CHROME_NODES__', description: 'Number of chrome node containers to scale.')
     }
