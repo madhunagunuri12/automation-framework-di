@@ -102,8 +102,8 @@ configFiles.each { String filePath ->
     }
 
     String jobName = requiredString(jobConfig, 'jobName', filePath)
-    String description = optionalString(jobConfig, 'description', "Generated from ${filePath}")
-    boolean disabled = optionalBoolean(jobConfig, 'disabled', false)
+    String jobDescription = optionalString(jobConfig, 'description', "Generated from ${filePath}")
+    boolean jobDisabled = optionalBoolean(jobConfig, 'disabled', false)
 
     Map gradle = (jobConfig.get('gradle') instanceof Map) ? (Map) jobConfig.get('gradle') : [:]
 
@@ -126,8 +126,8 @@ configFiles.each { String filePath ->
             .replace('__DEFAULT_CHROME_NODES__', escapeForGroovySingleQuote(chromeNodes))
 
     pipelineJob(jobName) {
-        description(description)
-        disabled(disabled)
+        description(jobDescription)
+        disabled(jobDisabled)
 
         logRotator {
             daysToKeep(14)
